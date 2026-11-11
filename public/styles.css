@@ -1,0 +1,782 @@
+/* ==============================================================================
+   여운 감성 분석기 스타일시트 (styles.css)
+   ==============================================================================
+   - 선명한 실제 나선 은하(Spiral Galaxy) 240초 공전 회전 배경 (dot 격자 없음)
+   - 밤하늘 실제 별처럼 불규칙하게 영롱하게 반짝이는 자연스러운 별빛(Twinkle) 레이어
+   - 90도/180도 회전 및 다양한 화면비에서도 검정 여백이 1px도 생기지 않는 220vmax 설계
+   - 순백색(#ffffff) 화이트 모노크롬 테마 & 웹 접근성(WCAG AA) 완벽 지원
+   ============================================================================== */
+
+/* 1. 디자인 시스템 변수 정의 (화이트 모노크롬 테마) */
+:root {
+  /* 배경 색상 */
+  --bg-color: #030407;
+  --bg-card: rgba(12, 14, 20, 0.88); /* 선명한 은하 위에서도 글씨가 또렷한 글래스모피즘 */
+  --bg-input: rgba(8, 10, 15, 0.94);
+
+  /* 화이트 포인트 컬러 */
+  --accent-white: #ffffff;
+  --accent-white-soft: #f3f4f6;
+  --accent-white-dim: rgba(255, 255, 255, 0.18);
+  --accent-white-glow: rgba(255, 255, 255, 0.4);
+
+  /* 텍스트 색상 */
+  --text-primary: #ffffff;
+  --text-secondary: #c5cbd5;
+  --text-muted: #838a98;
+
+  /* 테두리 색상 */
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --border-focus: #ffffff;
+
+  /* 감성 상태별 보조 색상 (텍스트 의미를 보조하는 은은한 톤) */
+  --sentiment-pos: #4ade80;
+  --sentiment-pos-bg: rgba(74, 222, 128, 0.14);
+  --sentiment-neg: #fb7185;
+  --sentiment-neg-bg: rgba(251, 113, 133, 0.14);
+  --sentiment-neu: #cbd5e1;
+  --sentiment-neu-bg: rgba(203, 213, 225, 0.14);
+
+  /* 타이포그래피 및 인터랙션 */
+  --font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-lg: 18px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 2. 전역 리셋 및 기본 설정 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크린 리더 전용 숨김 클래스 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==============================================================================
+   3. 실제 나선 은하 공전 회전 배경화면 (240초 주기 & 자연스러운 별빛 반짝임)
+   ============================================================================== */
+.space-bg {
+  position: fixed;
+  /* 화면의 정중앙에 기준점을 고정합니다 */
+  top: 50%;
+  left: 50%;
+  /* 90도 회전 시에도 화면 모서리가 파고들지 않도록 화면 대각선보다 훨씬 큰 220vmax로 설정 */
+  width: 220vmax;
+  height: 220vmax;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: #030407;
+
+  /* 나선 은하 핵과 성운이 선명하게 살아있는 고해상도 천체 사진 */
+  background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2560&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center center;
+
+  /* 선명하고 화사한 우주 색감을 위한 그래픽 필터 */
+  filter: brightness(1.22) contrast(1.18) saturate(1.25);
+
+  /* 화면 정중앙을 축으로 240초(4분) 동안 아주 천천히 공전하는 장엄한 회전 */
+  transform-origin: center center;
+  transform: translate(-50%, -50%);
+  animation: galaxyOrbit 240s linear infinite;
+  will-change: transform;
+}
+
+/* 은하 사진의 선명도를 유지하며 외곽을 감싸는 소프트 비네팅 오버레이 */
+.space-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(3, 4, 7, 0.16) 0%, rgba(3, 4, 7, 0.42) 60%, rgba(2, 3, 5, 0.72) 100%);
+}
+
+/* ==============================================================================
+   실제 밤하늘처럼 불규칙하게 반짝이는 자연스러운 별빛 효과 (Twinkle Stars)
+   - 바둑판식 dot 배열이 아니라, 무작위 천체 좌표에 배치된 유기적 별빛들입니다.
+   ============================================================================== */
+.twinkle-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 레이어 1: 중간 크기(2px)의 영롱한 별빛 (3.8초 주기 반짝임) */
+.twinkle-layer-1 {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 
+    14vw 22vh 0 0.5px #fff,
+    28vw 68vh 0 0.8px #fff,
+    42vw 15vh 0 0.4px #fff,
+    58vw 82vh 0 0.6px #fff,
+    73vw 34vh 0 0.9px #fff,
+    88vw 53vh 0 0.5px #fff,
+    19vw 88vh 0 0.7px #fff,
+    33vw 41vh 0 0.4px #fff,
+    64vw 19vh 0 0.8px #fff,
+    82vw 76vh 0 0.6px #fff,
+    115vw 45vh 0 0.7px #fff,
+    145vw 85vh 0 0.5px #fff,
+    165vw 25vh 0 0.9px #fff,
+    185vw 65vh 0 0.6px #fff;
+  animation: starTwinkle 3.8s ease-in-out infinite alternate;
+}
+
+/* 레이어 2: 조금 더 크고 밝은(3px) 보석 같은 별빛 (5.6초 주기 반짝임, 은은한 발광) */
+.twinkle-layer-2 {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 
+    22vw 36vh 2px 1px rgba(255, 255, 255, 0.9),
+    49vw 74vh 2px 1px rgba(255, 255, 255, 0.85),
+    67vw 28vh 2px 1px rgba(255, 255, 255, 0.9),
+    85vw 62vh 2px 1px rgba(255, 255, 255, 0.8),
+    12vw 61vh 2px 1px rgba(255, 255, 255, 0.9),
+    37vw 18vh 2px 1px rgba(255, 255, 255, 0.85),
+    78vw 86vh 2px 1px rgba(255, 255, 255, 0.9),
+    130vw 30vh 2px 1px rgba(255, 255, 255, 0.85),
+    155vw 70vh 2px 1px rgba(255, 255, 255, 0.9),
+    175vw 40vh 2px 1px rgba(255, 255, 255, 0.8);
+  animation: starTwinkle 5.6s ease-in-out infinite alternate 1.8s;
+}
+
+/* 레이어 3: 미세하고 깊은 원거리(1.5px)의 은은한 별빛 (4.4초 주기 반짝임) */
+.twinkle-layer-3 {
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 50%;
+  background: rgba(225, 238, 255, 0.95);
+  box-shadow: 
+    8vw 14vh 0 0 #fff,
+    26vw 48vh 0 0 #fff,
+    51vw 32vh 0 0 #fff,
+    69vw 65vh 0 0 #fff,
+    92vw 21vh 0 0 #fff,
+    16vw 72vh 0 0 #fff,
+    44vw 89vh 0 0 #fff,
+    61vw 46vh 0 0 #fff,
+    89vw 92vh 0 0 #fff,
+    122vw 66vh 0 0 #fff,
+    140vw 18vh 0 0 #fff,
+    168vw 52vh 0 0 #fff,
+    192vw 80vh 0 0 #fff;
+  animation: starTwinkle 4.4s ease-in-out infinite alternate 0.9s;
+}
+
+/* 별빛 반짝임(Twinkle) 키프레임: 자연스럽게 밝아졌다 은은해지는 펄스 */
+@keyframes starTwinkle {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 0.25;
+    transform: scale(0.9);
+  }
+}
+
+/* 은하 공전(Galaxy Orbit) 키프레임: 240초 동안 360도 완벽 회전 */
+@keyframes galaxyOrbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1.02);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.12);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(1.02);
+  }
+}
+
+/* 4. 레이아웃 컨테이너 */
+.app-container {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* 5. 상단 헤더 및 브랜드 */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 화이트 모노크롬 BETA 배지 */
+.brand-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background-color: var(--accent-white);
+  color: #000000;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+.brand-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.brand-title span {
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.brand-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* 6. 히어로 영역 */
+.hero-section {
+  padding: 8px 0 4px;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.85);
+}
+
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 580px;
+  line-height: 1.6;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+/* 7. 공통 카드 스타일 (선명한 은하 위에서도 글씨가 또렷하게 읽히는 블러 카드) */
+.card {
+  background-color: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.7);
+  transition: var(--transition);
+}
+
+/* 8. 입력 폼 영역 */
+.sentiment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.char-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.char-count.limit-near {
+  color: #fbbf24;
+}
+
+.char-count.limit-reached {
+  color: var(--sentiment-neg);
+  font-weight: 700;
+}
+
+/* 원클릭 예시 문장 추천 칩 스타일 */
+.example-chips-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.example-chips-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.example-chip {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+}
+
+.example-chip:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.example-chip:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* 텍스트 입력창 영역 (완벽한 공란 보장) */
+.textarea-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.text-input {
+  display: block;
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  padding: 18px;
+  resize: vertical;
+  min-height: 145px;
+  outline: none;
+  transition: var(--transition);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* 화이트 포커스 링 */
+.text-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-white-dim), 0 0 18px rgba(255, 255, 255, 0.2);
+}
+
+.text-input::placeholder {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* 오류 메시지 영역 */
+.error-message {
+  background-color: var(--sentiment-neg-bg);
+  border: 1px solid var(--sentiment-neg);
+  color: #fecdd3;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* 폼 하단 버튼 및 안내 */
+.form-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+@media (min-width: 600px) {
+  .form-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.input-notice {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.notice-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+
+/* 버튼 그룹 (지우기 + 분석하기) */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 다시 쓰기(지우기) 버튼 */
+.reset-btn {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 13px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+  white-space: nowrap;
+}
+
+.reset-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==============================================================================
+   9. 순백색 버튼 (화이트 테마)
+   ============================================================================== */
+.submit-btn {
+  background-color: var(--accent-white);
+  color: #000000;
+  font-family: inherit;
+  font-size: 1.02rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+  transition: var(--transition);
+  outline: none;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: var(--accent-white-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px var(--accent-white-glow);
+}
+
+.submit-btn:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 로딩 스피너 애니메이션 (버튼 내부) */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 10. 결과 표시 카드 */
+.result-card {
+  border-color: var(--border-subtle);
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.result-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.result-badge-disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background-color: var(--bg-input);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+/* 결과 복사 버튼 */
+.copy-result-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+  outline: none;
+}
+
+.copy-result-btn:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.copy-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.result-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 감성 라벨 박스 */
+.sentiment-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+}
+
+.sentiment-tag {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* 감성별 보조 스타일 */
+.sentiment-positive {
+  color: var(--sentiment-pos);
+  border-color: rgba(74, 222, 128, 0.45);
+  background-color: var(--sentiment-pos-bg);
+}
+
+.sentiment-negative {
+  color: var(--sentiment-neg);
+  border-color: rgba(251, 113, 133, 0.45);
+  background-color: var(--sentiment-neg-bg);
+}
+
+.sentiment-neutral {
+  color: var(--sentiment-neu);
+  border-color: rgba(203, 213, 225, 0.45);
+  background-color: var(--sentiment-neu-bg);
+}
+
+/* ==============================================================================
+   11. 순백색 신뢰도 게이지 바 (화이트 테마)
+   ============================================================================== */
+.confidence-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confidence-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.confidence-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.confidence-value {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+}
+
+.confidence-bar-wrapper {
+  width: 100%;
+  height: 12px;
+  background-color: var(--bg-input);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 신뢰도 게이지 채움: 화이트 & 실버 그라데이션 및 은은한 발광 */
+.confidence-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d1d5db 0%, #ffffff 100%);
+  border-radius: 9999px;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.5);
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 분석 근거 */
+.reason-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  background-color: var(--bg-input);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.reason-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.reason-text {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+/* 12. 푸터 */
+.app-footer {
+  margin-top: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.disclaimer-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.copyright {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* 13. 접근성: 애니메이션 감소 사용자 환경 대응 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .space-bg, .twinkle-stars {
+    animation: none !important;
+  }
+}

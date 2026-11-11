@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "echo 'No build step required for static and serverless'"
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public', {recursive:true}); ['index.html','styles.css','app.js'].forEach(f=>fs.copyFileSync(f, 'public/'+f)); console.log('Build complete: public directory prepared.');\""
   },
   "keywords": [
     "sentiment-analysis",
