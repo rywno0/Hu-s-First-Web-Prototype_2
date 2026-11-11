@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public', {recursive:true}); ['index.html','styles.css','app.js'].forEach(f=>fs.copyFileSync(f, 'public/'+f)); console.log('Build complete: public directory prepared.');\""
+    "build": "node build.js"
   },
   "keywords": [
     "sentiment-analysis",
