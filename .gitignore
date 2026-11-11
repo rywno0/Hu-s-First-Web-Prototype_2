@@ -1,0 +1,17 @@
+# 1. 의존성 패키지 폴더 (GitHub 업로드 제외)
+node_modules/
+
+# 2. 환경 변수 및 비밀 키 파일 (보안을 위해 GitHub 업로드 절대 제외)
+.env
+.env.local
+.env.*.local
+
+# 3. 운영체제 및 에디터 임시 파일
+.DS_Store
+Thumbs.db
+.vscode/
+
+# 4. 로그 및 Vercel 빌드 임시 파일
+*.log
+npm-debug.log*
+.vercel/

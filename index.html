@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>여운 감성 분석기 | 마음의 결을 읽다</title>
+  <meta name="description" content="한국어 텍스트의 감성 방향(긍정, 부정, 중립)과 신뢰도, 짧은 분석 근거를 확인하는 단일 페이지 웹 서비스입니다." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- 1. 선명하게 360도 공전하는 실제 나선 은하 배경 레이어 (240초 공전 주기 & 자연스러운 별빛 반짝임) -->
+  <div class="space-bg" aria-hidden="true">
+    <div class="space-overlay"></div>
+    <!-- 불규칙하게 자연스럽게 반짝이는 실제 별빛 레이어 3종 (dot 격자 없음) -->
+    <div class="twinkle-stars twinkle-layer-1"></div>
+    <div class="twinkle-stars twinkle-layer-2"></div>
+    <div class="twinkle-stars twinkle-layer-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- 2. 상단 브랜드 영역 -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-badge">BETA</span>
+        <h1 class="brand-title">여운 <span>餘韻</span></h1>
+      </div>
+      <p class="brand-desc">한국어 텍스트 감성 분석 서비스</p>
+    </header>
+
+    <!-- 3. 히어로 영역 -->
+    <section class="hero-section">
+      <h2 class="hero-title">마음의 결을 읽다</h2>
+      <p class="hero-subtitle">
+        문장에 담긴 온도를 세심하게 살펴 긍정, 부정, 중립의 정서와 그 이유를 전해드립니다.
+      </p>
+    </section>
+
+    <!-- 4. 메인 콘텐츠 (입력 및 결과 영역) -->
+    <main class="main-content">
+      <!-- 텍스트 입력 카드 -->
+      <section class="card input-card" aria-labelledby="input-heading">
+        <h3 id="input-heading" class="sr-only">감성 분석 입력 영역</h3>
+        
+        <form id="sentiment-form" class="sentiment-form" novalidate>
+          <div class="form-header">
+            <label for="text-input" class="form-label">분석할 텍스트</label>
+            <span class="char-count" id="char-count" aria-live="polite">0 / 2,000자</span>
+          </div>
+
+          <!-- 원클릭 예시 문장 추천 칩 -->
+          <div class="example-chips-wrapper" aria-label="예시 문장 선택">
+            <span class="example-chips-label">💡 빠른 예시:</span>
+            <div class="example-chips">
+              <button type="button" class="example-chip chip-pos" data-text="오늘 드디어 프로젝트가 잘 마무리되어서 너무 뿌듯하고 기분이 날아갈 것 같아요!">
+                😊 긍정 예시
+              </button>
+              <button type="button" class="example-chip chip-neg" data-text="열심히 준비했는데 결과가 뜻대로 나오지 않아 너무 속상하고 답답하네요.">
+                😢 부정 예시
+              </button>
+              <button type="button" class="example-chip chip-neu" data-text="내일 회의는 오후 2시에 대회의실에서 진행되며 관련 자료는 미리 지참해 주세요.">
+                😐 중립 예시
+              </button>
+            </div>
+          </div>
+
+          <!-- 확실한 텍스트 입력 공란 (textarea 태그) -->
+          <div class="textarea-wrapper">
+            <textarea id="text-input" name="text" class="text-input" rows="6" maxlength="2000" placeholder="분석하고 싶은 일기, 메시지, 편지, 후기 등을 자유롭게 입력해 보세요. (위의 빠른 예시 버튼을 누르면 즉시 입력됩니다)" aria-describedby="input-notice char-count" required></textarea>
+          </div>
+
+          <!-- 오류 메시지 표시 영역 -->
+          <div id="error-message" class="error-message" role="alert" aria-live="assertive" hidden></div>
+
+          <div class="form-footer">
+            <p id="input-notice" class="input-notice">
+              <svg class="notice-icon" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              텍스트는 영구 저장되지 않으며, 분석을 위해 인공지능 제공자에게 안전하게 전송됩니다.
+            </p>
+
+            <div class="form-actions">
+              <button type="button" id="reset-btn" class="reset-btn" title="입력창을 비웁니다">
+                지우기
+              </button>
+              <button type="submit" id="submit-btn" class="submit-btn">
+                <span class="btn-text">감성 분석하기</span>
+                <span class="spinner" aria-hidden="true" hidden></span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- 5. 결과 표시 카드 (aria-live="polite" 적용) -->
+      <section 
+        id="result-section" 
+        class="card result-card" 
+        aria-labelledby="result-heading" 
+        aria-live="polite" 
+        hidden
+      >
+        <div class="result-header">
+          <div class="result-header-left">
+            <h3 id="result-heading" class="result-title">분석 결과</h3>
+            <span class="result-badge-disclaimer">모델 추정치 · 참고용</span>
+          </div>
+          <!-- 결과 복사 버튼 -->
+          <button type="button" id="copy-result-btn" class="copy-result-btn" title="분석 결과를 클립보드에 복사합니다">
+            <svg class="copy-icon" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 2H9a3 3 0 01-3-2z" />
+            </svg>
+            <span id="copy-btn-text">결과 복사</span>
+          </button>
+        </div>
+
+        <div class="result-body">
+          <!-- 감성 라벨 카드 -->
+          <div class="sentiment-box" id="sentiment-box">
+            <span class="sentiment-tag" id="sentiment-tag">긍정</span>
+            <span class="sentiment-indicator" aria-hidden="true"></span>
+          </div>
+
+          <!-- 신뢰도 표시 막대 및 수치 -->
+          <div class="confidence-container">
+            <div class="confidence-header">
+              <span class="confidence-label">분석 신뢰도</span>
+              <span class="confidence-value" id="confidence-value">0%</span>
+            </div>
+            <div class="confidence-bar-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="confidence-bar" aria-label="감성 분석 신뢰도 막대">
+              <div class="confidence-bar-fill" id="confidence-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- 분석 근거 안내 -->
+          <div class="reason-container">
+            <h4 class="reason-label">분석 근거</h4>
+            <p class="reason-text" id="reason-text">
+              <!-- JS에서 동적으로 채워집니다 -->
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 6. 하단 안내 및 저작권 표기 -->
+    <footer class="app-footer">
+      <p class="disclaimer-text">
+        본 분석 결과는 인공지능 모델의 자체 추정치로, 심리적·의학적 진단이나 개인의 내면을 확정적으로 판정하지 않습니다.<br />
+        가벼운 참고용 목적으로만 활용해 주시기 바랍니다.
+      </p>
+      <p class="copyright">© 2026 여운 (Yeoun). All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
