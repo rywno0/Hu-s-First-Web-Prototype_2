@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build": "echo 'No build step required for static and serverless'"
   },
   "keywords": [
     "sentiment-analysis",
@@ -21,4 +22,3 @@
     "openai": "^4.86.1"
   }
 }
-
