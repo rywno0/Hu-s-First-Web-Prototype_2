@@ -4,7 +4,7 @@
 // Vercel Serverless Function 규격에 맞춘 감성 분석 엔드포인트입니다.
 // 클라이언트의 텍스트를 받아 OpenAI API를 통해 안전하게 감성을 분석하고
 // 긍정/부정/중립 결과와 신뢰도, 짧은 근거를 반환합니다.
-// 분석된 결과는 Supabase 데이터베이스(sentiment_logs)에 안전하게 비동기 기록됩니다.
+// 분석된 결과는 Supabase 데이터베이스(sentiment_logs)에 안전하게 영구 저장됩니다.
 // ==============================================================================
 
 import OpenAI from 'openai';
@@ -25,8 +25,8 @@ function getCodePointLength(str) {
 }
 
 /**
- * 실제 유효한 Supabase API 키를 똑똑하게 선택합니다.
- * 플레이스홀더('your_...')가 남아있는 키는 자동으로 배제하고 실제 유효한 키(ANON_KEY 등)를 선택합니다.
+ * 실제 유효한 Supabase API 키를 똑똑하게 감지하여 선택합니다.
+ * 플레이스홀더('your_...')가 남아있는 키는 자동으로 배제하고 실제 유효한 키(ANON_KEY 또는 SERVICE_ROLE)를 선택합니다.
  * @returns {string|null} 유효한 Supabase 키
  */
 function getValidSupabaseKey() {
@@ -43,8 +43,9 @@ function getValidSupabaseKey() {
 }
 
 /**
- * 분석된 결과를 Supabase sentiment_logs 테이블에 안전하게 비동기 기록합니다.
- * DB 저장 도중 오류가 발생하더라도 사용자 응답에는 절대 영향을 주지 않도록 안전하게 격리되어 동작합니다.
+ * 분석된 결과를 Supabase sentiment_logs 테이블에 안전하게 기록합니다.
+ * Vercel 서버리스 함수는 응답 반환 즉시 프로세스가 중지되므로 반드시 await로 완료를 보장해야 합니다.
+ * DB 저장 도중 오류가 발생하더라도 사용자 화면에는 영향을 주지 않도록 안전하게 격리되어 처리됩니다.
  * @param {Object} logData - 저장할 감성 분석 데이터
  */
 async function saveToSupabaseSafe(logData) {
@@ -54,6 +55,7 @@ async function saveToSupabaseSafe(logData) {
 
     // URL이나 유효한 Key가 없으면 안전하게 건너뜁니다.
     if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project-id')) {
+      console.log('ℹ️ [Supabase] URL 또는 유효한 API Key가 설정되지 않아 DB 저장을 건너뜁니다.');
       return;
     }
 
@@ -81,19 +83,20 @@ async function saveToSupabaseSafe(logData) {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=representation'
       },
       body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      console.warn('[Supabase Log Warning] DB 기록 응답 상태:', response.status);
+      const errText = await response.text();
+      console.warn(`⚠️ [Supabase DB 경고] 상태 코드: ${response.status}, 내용: ${errText}`);
     } else {
-      console.log('✅ [Supabase] 분석 결과가 sentiment_logs 테이블에 성공적으로 저장되었습니다!');
+      console.log('✅ [Supabase DB 성공] 분석 결과가 sentiment_logs 테이블에 안전하게 저장되었습니다!');
     }
   } catch (dbError) {
-    // DB 저장 오류는 서버 콘솔에만 가볍게 남기고 전체 사용자 요청을 중단시키지 않습니다.
-    console.warn('[Supabase Log] 비동기 DB 저장 오류 (안전 격리):', dbError.name || 'NetworkError');
+    // DB 저장 오류는 서버 콘솔에만 안전하게 남기고 전체 사용자 요청을 중단시키지 않습니다.
+    console.warn('⚠️ [Supabase DB 통신 오류]:', dbError.message || dbError);
   }
 }
 
@@ -263,13 +266,17 @@ export default async function handler(req, res) {
       reason: reason.trim().slice(0, 240)
     };
 
-    // 7. Supabase 비동기 안전 기록 (사용자 응답 지연 없이 백그라운드 처리)
-    saveToSupabaseSafe({
-      inputText: trimmedText,
-      sentiment: finalResult.sentiment,
-      confidence: finalResult.confidence,
-      reason: finalResult.reason
-    }).catch(() => {});
+    // 7. Supabase DB 영구 저장 보장 (Vercel 환경 프로세스 동결 방지를 위해 await 완료 보장)
+    try {
+      await saveToSupabaseSafe({
+        inputText: trimmedText,
+        sentiment: finalResult.sentiment,
+        confidence: finalResult.confidence,
+        reason: finalResult.reason
+      });
+    } catch (saveErr) {
+      console.warn('⚠️ Supabase 저장 중 예외 발생 (사용자 응답은 정상 진행):', saveErr);
+    }
 
     // 8. 클라이언트에 정제된 분석 결과 반환
     return res.status(200).json(finalResult);
